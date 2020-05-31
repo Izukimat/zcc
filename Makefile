@@ -1,6 +1,6 @@
 CFLAGS=-std=c11 -g -static
 
-zcc: zcc.c11
+zcc: zcc.c
 
 test: zcc
 		./test.sh
