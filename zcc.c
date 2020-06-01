@@ -7,20 +7,23 @@
 
 // Types of tokens
 typedef enum {
-	TK_RESERVED, // sign
-	TK_NUM,		 // integer token
-	TK_EOF,		 // EOF token
+	TK_RESERVED, // Keywords or punctuators
+	TK_NUM,		 // Integer literals
+	TK_EOF,		 // EOF markers
 } TokenKind;
 
 typedef struct Token Token;
 
 // Token type
 struct Token {
-	TokenKind kind;	// the type of Token
+	TokenKind kind;	// Token kind
 	Token *next;	// next Token input
 	int val;		// the value if TokenKind is TK_NUM
-	char *str;		// token strings
+	char *str;		// Token strings
 };
+
+//Input program
+char *user_input;
 
 // Token on the scope
 Token *token;
@@ -30,6 +33,20 @@ Token *token;
 void error(char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	exit(1);
+}
+
+// Reprots an error location and exit.
+void error_at(char *loc, char *fmt, ...){
+	va_list ap;
+	va_start(ap, fmt);
+
+	int pos = loc - user_input;
+	fprintf(stderr, "%s\n", user_input);
+	fprintf(stderr, "%*s", pos, ""); //print pos spaces.
+	fprintf(stderr, "^ ");
 	vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "\n");
 	exit(1);
@@ -48,7 +65,7 @@ bool consume(char op){
 // Otherwise, raise an error.
 void expect(char op) {
 	if (token->kind != TK_RESERVED || token->str[0] != op)
-		error("It is not '%c'", op);
+		error_at(token->str, "expected '%c'", op);
 	token = token->next;
 }
 
@@ -56,7 +73,7 @@ void expect(char op) {
 // Otherwise raise an error.
 int expect_number() {
 	if (token->kind != TK_NUM)
-		error("It is not a number");
+		error_at(token->str, "expected a number");
 	int val = token->val;
 	token = token->next;
 	return val;
@@ -75,8 +92,9 @@ Token *new_token(TokenKind kind, Token *cur, char *str){
 	return tok;
 }
 
-// Tokenize the input string p and return it.
-Token *tokenize(char *p){
+// Tokenize `user_input` and returns new tokens.
+Token *tokenize(){
+	char *p = user_input;
 	Token head;
 	head.next = NULL;
 	Token *cur = &head;
@@ -99,7 +117,7 @@ Token *tokenize(char *p){
 			continue;
 		}
 
-		error("Cannot tokenize!");
+		error_at(p, "expected a number");
 	}
 
 	new_token(TK_EOF, cur, p);
@@ -114,7 +132,8 @@ int main(int argc, char **argv){
 	}
 
 	// Tokenize
-	token = tokenize(argv[1]);
+	user_input = argv[1];
+	token = tokenize();
 
 	// Output the first part of the assembly.
 	printf(".intel_syntax noprefix\n");
