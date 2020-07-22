@@ -28,7 +28,7 @@ static void store(void){
     printf("  push rdi\n");
 }
 
-void gen(Node *node){
+static void gen(Node *node){
     switch (node->kind){
     case ND_NUM:
         printf("  push %d\n", node->val);

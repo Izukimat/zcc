@@ -1,32 +1,32 @@
 #include "zcc.h"
 
 
-Node *new_node(NodeKind kind){
+static Node *new_node(NodeKind kind){
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
     return node;
 }
 
-Node *new_binary(NodeKind kind, Node *lhs, Node *rhs){
+static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs){
     Node *node = new_node(kind);
     node->lhs = lhs;
     node->rhs = rhs;
     return node;
 }
 
-Node *new_unary(NodeKind kind, Node *expr) {
+static Node *new_unary(NodeKind kind, Node *expr) {
   Node *node = new_node(kind);
   node->lhs = expr;
   return node;
 }
 
-Node *new_num(int val){
+static Node *new_num(int val){
     Node *node = new_node(ND_NUM);
     node->val = val;
     return node;
 }
 
-Node *new_var_node(char name){
+static Node *new_var_node(char name){
 	Node *node = new_node(ND_VAR);
 	node->name = name;
 	return node;
@@ -45,15 +45,15 @@ unary      = ("+" | "-")? primary
 primary    = num | ident | "(" expr ")"
 */
 
-Node *stmt(void);
-Node *expr(void);
-Node *assign(void);
-Node *equality(void);
-Node *relational(void);
-Node *add(void);
-Node *mul(void);
-Node *unary(void);
-Node *primary(void);
+static Node *stmt(void);
+static Node *expr(void);
+static Node *assign(void);
+static Node *equality(void);
+static Node *relational(void);
+static Node *add(void);
+static Node *mul(void);
+static Node *unary(void);
+static Node *primary(void);
 
 // program = stmt*
 Node *program(void){
@@ -81,12 +81,12 @@ Node *stmt(void){
 }
 
 // expr = assign
-Node *expr(void) {
+static Node *expr(void) {
   return assign();
 }
 
 // assign equality ("=" assign)?
-Node *assign(void) {
+static Node *assign(void) {
     Node *node = equality();
     if (consume("="))
         node = new_binary(ND_ASSIGN, node, assign());
@@ -94,7 +94,7 @@ Node *assign(void) {
 }
 
 // equality = relational ("==" relational | "!=" relational)*
-Node *equality(void) {
+static Node *equality(void) {
   Node *node = relational();
 
   for (;;) {
@@ -108,7 +108,7 @@ Node *equality(void) {
 }
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
-Node *relational(void) {
+static Node *relational(void) {
   Node *node = add();
 
   for (;;) {
@@ -126,7 +126,7 @@ Node *relational(void) {
 }
 
 // add = mul ("+" mul | "-" mul)*
-Node *add(void) {
+static Node *add(void) {
     Node *node = mul();
 
     for (;;){
@@ -140,7 +140,7 @@ Node *add(void) {
 }
 
 // mul = unary ("*" unary | "/" unary)*
-Node *mul(void){
+static Node *mul(void){
     Node *node = unary();
 
     for(;;){
@@ -155,7 +155,7 @@ Node *mul(void){
 
 // unary = ("+" | "-")? unary
 //       | primary
-Node *unary(void){
+static Node *unary(void){
     if (consume("+"))
         return primary();
     if (consume("-"))
@@ -164,7 +164,7 @@ Node *unary(void){
 }
 
 // primary = "(" expr ")" | ident | num
-Node *primary(void){
+static Node *primary(void){
     // if the next token is "(", it should be "(" expr ")".
     if (consume("(")){
         Node *node = expr();
