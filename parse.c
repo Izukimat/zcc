@@ -1,5 +1,27 @@
 #include "zcc.h"
 
+/*
+program    = stmt*
+stmt       = expr ";" | "return" expr ";"
+expr       = assign
+assign     = equality ("=" assign)?
+equality   = relational ("==" relational | "!=" relational)*
+relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+add        = mul ("+" mul | "-" mul)*
+mul        = unary ("*" unary | "/" unary)*
+unary      = ("+" | "-")? primary
+primary    = num | ident | "(" expr ")"
+*/
+
+static Node *stmt(void);
+static Node *expr(void);
+static Node *assign(void);
+static Node *equality(void);
+static Node *relational(void);
+static Node *add(void);
+static Node *mul(void);
+static Node *unary(void);
+static Node *primary(void);
 
 static Node *new_node(NodeKind kind){
     Node *node = calloc(1, sizeof(Node));
@@ -32,28 +54,9 @@ static Node *new_var_node(char name){
 	return node;
 }
 
-/*
-program    = stmt*
-stmt       = expr ";"
-expr       = assign
-assign     = equality ("=" assign)?
-equality   = relational ("==" relational | "!=" relational)*
-relational = add ("<" add | "<=" add | ">" add | ">=" add)*
-add        = mul ("+" mul | "-" mul)*
-mul        = unary ("*" unary | "/" unary)*
-unary      = ("+" | "-")? primary
-primary    = num | ident | "(" expr ")"
-*/
-
-static Node *stmt(void);
-static Node *expr(void);
-static Node *assign(void);
-static Node *equality(void);
-static Node *relational(void);
-static Node *add(void);
-static Node *mul(void);
-static Node *unary(void);
-static Node *primary(void);
+static Node *read_expr_stmt(void){
+  return new_unary(ND_EXPR_STMT, expr());
+}
 
 // program = stmt*
 Node *program(void){
@@ -68,18 +71,35 @@ Node *program(void){
 }
 
 // stmt = expr ";"
+//      | "if" "(" expr ")" stmt ("else" stmt)?
+//      | "while" "(" expr ")" stmt
+//      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+//      | ...
 Node *stmt(void){
 	if (consume("return")){
 		Node *node = new_unary(ND_RETURN, expr());
 		expect(";");
 		return node;
 	}
+  
+  if (consume("if")){
+    Node *node = new_node(ND_IF);
+    expect("(");
+    node->cond = expr();
+    expect(")");
+    node->then = stmt();
+    if (consume("else"))
+      node->els = stmt();
+    return node;
+  }
 
-    Node *node = new_unary(ND_EXPR_STMT, expr());
+  // statement with ;
+  Node *node = read_expr_stmt();
 	expect(";");
 	return node;
-}
 
+
+}
 // expr = assign
 static Node *expr(void) {
   return assign();

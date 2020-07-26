@@ -115,7 +115,16 @@ Token *tokenize(void){
 			p += 6;
 			continue;
 		}
+        if (startswith(p, "if") && !is_alnum(p[2])){
+            cur = new_token(TK_RESERVED, cur, p, 2);
+            p += 2;
+            if (startswith(p, "else") && !is_alnum(p[4])){
+                cur = new_token(TK_RESERVED, cur, p, 4);
+                p += 4;
+            }
+            continue;
 
+        }
 		// Identifier
         if ('a' <= *p && *p <= 'z'){
             cur = new_token(TK_IDENT, cur, p++, 1);

@@ -53,9 +53,10 @@ typedef enum {
   	ND_LE,  	// <=
 	ND_NUM, 	// Integer
 	ND_ASSIGN,	// =
-	ND_VAR,	// local variable
-	ND_RETURN,    // "return"
+	ND_VAR,		// local variable
+	ND_RETURN,  // "return"
   	ND_EXPR_STMT, // Expression statement
+	ND_IF,		// if statement
 }NodeKind;
 
 // AST node type
@@ -65,6 +66,11 @@ struct Node{
 	Node *next;		// next node
 	Node *lhs;		// left hand side
 	Node *rhs;		// right hand side
+
+	Node *cond;
+	Node *then;
+	Node *els;
+	
 	int val;		// used when kind is ND_NUM
 	char name;		// used when kind is ND_VAL
 };
